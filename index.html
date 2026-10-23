@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Protein Calc">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2A1F1F" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Protein Calc</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<section id="v-today" class="view on">
+  <div class="hd">
+    <div class="brand">Protein <span>Calc</span></div>
+    <div class="icons">
+      <button class="ib" data-go="history" aria-label="History"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20h16M7 16V11M12 16V6M17 16v-7"/></svg></button>
+      <button class="ib" data-go="usual" aria-label="Favorites and settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12.5V5a2 2 0 0 1 2-2h7.5L21 11.5 12.5 20z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg></button>
+    </div>
+  </div>
+
+  <div class="big"><div class="sm" id="dayLabel">Today</div><span class="n" id="tot">0</span><span class="u"> g</span></div>
+  <div class="prog"><div id="bar" style="width:0%"></div></div>
+  <div class="under"><span id="left"></span><span id="goalLbl"></span></div>
+
+  <div class="sec">
+    <p class="sm">The usual</p>
+    <div class="grid" id="favs"></div>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Meat by raw weight</p>
+    <div class="chips" id="meats"></div>
+    <div class="readout">
+      <span><span class="v" id="oz">6</span><span class="l"> oz raw</span></span>
+      <span><span class="v" id="pg" style="color:var(--br)">0</span><span class="l"> g protein</span></span>
+    </div>
+    <input type="range" id="sl" min="1" max="16" step="0.5" value="6" aria-label="Raw weight in ounces">
+    <div class="ticks"><span>1 oz</span><span id="midTick">8 oz</span><span id="maxTick">16 oz</span></div>
+    <button class="btn solid" id="addMeat">Add</button>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Today's ticket</p>
+    <div class="rc"><div id="log"></div><div class="rr tot"><span>Total</span><span id="rt">0g</span></div></div>
+    <p class="hint">Tap an item to remove it.</p>
+  </div>
+
+  <div class="sec"><button class="btn line" id="endDay">End day</button></div>
+</section>
+
+<section id="v-history" class="view">
+  <div class="hd"><div class="brand" style="font-size:24px">History</div><button class="ib" data-go="today" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="grid sec">
+    <div class="stat"><div class="l">7-day average</div><span class="v" id="avg7">—</span><span class="l"> g/day</span></div>
+    <div class="stat"><div class="l">30-day average</div><span class="v" id="avg30">—</span><span class="l"> g/day</span></div>
+  </div>
+  <p class="hint">Averages count the days you logged.</p>
+  <div class="sec">
+    <p class="sm">Last seven days</p>
+    <div class="bars" id="bars" style="margin-top:22px"></div>
+    <div class="days" id="days"></div>
+    <p class="hint">Solid burgundy hit your goal. Dashed is today, still open.</p>
+  </div>
+  <div class="sec">
+    <p class="sm">By the month</p>
+    <div class="rc" id="months"></div>
+  </div>
+  <div class="sec">
+    <p class="sm">Past days</p>
+    <div class="rc" id="past"></div>
+    <p class="hint">Tap a day to remove it.</p>
+  </div>
+</section>
+
+<section id="v-usual" class="view">
+  <div class="hd"><div class="brand" style="font-size:24px">The usual</div><button class="ib" data-go="today" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+  <div class="sec">
+    <p class="sm">Favorites</p>
+    <div class="rc" id="favList"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="text" id="fName" placeholder="Cottage cheese" autocomplete="off">
+      <input type="number" id="fG" placeholder="g" inputmode="decimal" style="width:70px;flex:none">
+      <button class="sbtn" id="fAdd">Save</button>
+    </div>
+    <p class="err" id="fErr"></p>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Meats, raw grams of protein per oz</p>
+    <div class="rc" id="meatList"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="text" id="mName" placeholder="Pork loin" autocomplete="off">
+      <input type="number" id="mR" placeholder="g/oz" inputmode="decimal" style="width:76px;flex:none">
+      <button class="sbtn" id="mAdd">Save</button>
+    </div>
+    <p class="err" id="mErr"></p>
+    <p class="hint">Check the package label: protein per serving ÷ serving size in oz.</p>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Daily goal</p>
+    <div class="row"><input type="number" id="goal" inputmode="numeric"><button class="sbtn" id="goalSet">Set</button></div>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Slider maximum</p>
+    <div class="row"><input type="number" id="maxOz" inputmode="numeric"><button class="sbtn" id="maxSet">Set</button></div>
+  </div>
+
+  <div class="sec">
+    <p class="sm">Backup</p>
+    <div class="grid">
+      <button class="btn line" id="exp" style="font-size:15px">Export</button>
+      <button class="btn line" id="impBtn" style="font-size:15px">Import</button>
+    </div>
+    <input type="file" id="imp" accept="application/json,.json" hidden>
+    <p class="hint">Your data lives only on this phone. Export now and then to keep a copy.</p>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status"><span id="tMsg"></span><button id="tUndo">Undo</button></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
