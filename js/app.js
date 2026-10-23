@@ -99,15 +99,31 @@ $('addMeat').onclick=()=>{
   const oz=+$('sl').value;add(`${m.name} ${fmt(oz)}oz raw`,Math.round(oz*m.r));
 };
 
-$('endDay').onclick=()=>{
-  const t=dayTotal();
-  if(!S.day.entries.length){toast('Nothing to end yet',false);return}
-  if(!confirm(`End the day at ${fmt(t)}g? It'll be saved to history and the counter resets.`))return;
-  const date=S.day.start||today(),ex=S.history.find(h=>h.date===date);
+function closeDay(){
+  const t=dayTotal(),date=S.day.start||today(),ex=S.history.find(h=>h.date===date);
   if(ex)ex.total+=t;else S.history.push({date,total:t});
   S.history.sort((a,b)=>a.date<b.date?-1:1);
-  S.day={start:null,entries:[]};save();renderToday();toast(`Saved ${fmt(t)}g to history`,false);
+  S.day={start:null,entries:[]};lastAdded=null;save();
+  return t;
+}
+$('endDay').onclick=()=>{
+  if(!S.day.entries.length){toast('Nothing to end yet',false);return}
+  if(!confirm(`End the day at ${fmt(dayTotal())}g? It'll be saved to history and the counter resets.`))return;
+  const t=closeDay();renderToday();toast(`Saved ${fmt(t)}g to history`,false);
 };
+
+// Days end on their own at midnight: on open, on return to the app, and by timer while it's on screen.
+let midTimer=null;
+function rollover(){
+  if(S.day.entries.length&&S.day.start&&S.day.start<today()){
+    const d=new Date(S.day.start+'T12:00').toLocaleDateString(undefined,{weekday:'long'});
+    const t=closeDay();renderToday();
+    if($('v-history').classList.contains('on'))renderHistory();
+    toast(`${d} saved: ${fmt(t)}g`,false);
+  }
+  clearTimeout(midTimer);
+  const n=new Date();midTimer=setTimeout(rollover,new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,1)-n);
+}
 
 function avgSince(days){
   const c=new Date();c.setDate(c.getDate()-days);const k=dkey(c);
@@ -177,6 +193,6 @@ function go(v){
 }
 
 $('sl').value=Math.min(S.lastOz||6,S.maxOz);
-renderToday();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderToday()});
+renderToday();rollover();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderToday();rollover()}});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
