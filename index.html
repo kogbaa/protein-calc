@@ -75,7 +75,16 @@
   <div class="sec">
     <p class="sm">Past days</p>
     <div class="rc" id="past"></div>
-    <p class="hint">Tap a day to remove it.</p>
+    <p class="hint">Tap a day to change or remove it.</p>
+  </div>
+  <div class="sec">
+    <p class="sm">Add a missed day</p>
+    <div class="row">
+      <input type="date" id="pDate" aria-label="Day">
+      <input type="number" id="pG" placeholder="g" inputmode="decimal" style="width:76px;flex:none">
+      <button class="sbtn" id="pAdd">Save</button>
+    </div>
+    <p class="err" id="pErr"></p>
   </div>
 </section>
 

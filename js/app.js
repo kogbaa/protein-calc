@@ -71,10 +71,14 @@ $('tUndo').onclick=()=>{
 };
 
 document.addEventListener('click',ev=>{
-  const b=ev.target.closest('[data-fav],[data-meat],[data-entry],[data-go],[data-rmfav],[data-rmmeat],[data-past],.rm');
-  if(!b)return;
+  const b=ev.target.closest('[data-fav],[data-meat],[data-entry],[data-go],[data-rmfav],[data-rmmeat],[data-past],[data-savepast],[data-rmpast],.rm');
+  if(!b||ev.target.tagName==='INPUT')return;
   if(b.dataset.fav){const f=S.favs.find(x=>x.id===b.dataset.fav);if(f)add(f.name,f.g)}
   else if(b.dataset.meat){S.sel=b.dataset.meat;save();renderToday()}
+  else if(b.dataset.savepast)savePast(b.dataset.savepast);
+  else if(b.dataset.rmpast){
+    const d=b.dataset.rmpast;if(confirm(`Remove ${longDate(d)} from history?`)){S.history=S.history.filter(h=>h.date!==d);pastSel=null;save();renderHistory()}
+  }
   else if(b.classList.contains('rm')){
     const id=b.dataset.id;S.day.entries=S.day.entries.filter(e=>e.id!==id);if(!S.day.entries.length)S.day.start=null;save();renderToday();
   }
@@ -88,7 +92,8 @@ document.addEventListener('click',ev=>{
     if(S.meats.length<=1&&!confirm('Remove your last meat?'))return;
     S.meats=S.meats.filter(m=>m.id!==b.dataset.rmmeat);if(S.sel===b.dataset.rmmeat)S.sel=S.meats[0]?.id||null;save();renderUsual()}
   else if(b.dataset.past){
-    const d=b.dataset.past;if(confirm(`Remove ${d} from history?`)){S.history=S.history.filter(h=>h.date!==d);save();renderHistory()}
+    pastSel=pastSel===b.dataset.past?null:b.dataset.past;renderHistory();
+    if(pastSel)$('past').querySelector('.pin')?.focus();
   }
 });
 
@@ -149,8 +154,30 @@ function renderHistory(){
     return `<div class="rr"><span>${n.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</span><span>${Math.round(a.reduce((x,y)=>x+y,0)/a.length)}g avg</span></div>`}).join(''):'<div class="empty">End your first day to start the ledger.</div>';
 
   const past=[...S.history].reverse().slice(0,30);
-  $('past').innerHTML=past.length?past.map(h=>`<div class="rr tap" data-past="${h.date}"><span>${new Date(h.date+'T12:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</span><span>${fmt(h.total)}g</span></div>`).join(''):'<div class="empty">No days saved yet.</div>';
+  $('past').innerHTML=past.length?past.map(h=>h.date===pastSel
+    ?`<div class="rr tap sel" data-past="${h.date}"><span>${shortDate(h.date)}</span><span class="row" style="gap:6px"><input type="number" class="pin" value="${fmt(h.total)}" inputmode="decimal" aria-label="Grams for ${shortDate(h.date)}"><button class="rm" data-savepast="${h.date}">Save</button><button class="rm ghost" data-rmpast="${h.date}">Remove</button></span></div>`
+    :`<div class="rr tap" data-past="${h.date}"><span>${shortDate(h.date)}</span><span>${fmt(h.total)}g</span></div>`).join(''):'<div class="empty">No days saved yet.</div>';
+  const y=new Date();y.setDate(y.getDate()-1);$('pDate').max=dkey(y);if(!$('pDate').value)$('pDate').value=dkey(y);
 }
+const shortDate=d=>new Date(d+'T12:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+const longDate=d=>new Date(d+'T12:00').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+let pastSel=null;
+const okGrams=v=>v>0&&v<2000;
+function savePast(d){
+  const v=parseFloat($('past').querySelector('.pin').value),h=S.history.find(x=>x.date===d);
+  if(!okGrams(v)){toast('Enter grams between 0 and 2000',false);return}
+  if(h)h.total=v;pastSel=null;save();renderHistory();toast(`${shortDate(d)} set to ${fmt(v)}g`,false);
+}
+$('past').addEventListener('keydown',ev=>{if(ev.key==='Enter'&&ev.target.classList.contains('pin'))savePast(pastSel)});
+$('pAdd').onclick=()=>{
+  const d=$('pDate').value,v=parseFloat($('pG').value);
+  if(!d||d>=today()){$('pErr').textContent='Pick a day before today.';return}
+  if(S.history.some(h=>h.date===d)){$('pErr').textContent=`${shortDate(d)} is already saved. Tap it above to change it.`;return}
+  if(!okGrams(v)){$('pErr').textContent='Enter grams between 0 and 2000.';return}
+  $('pErr').textContent='';S.history.push({date:d,total:v});S.history.sort((a,b)=>a.date<b.date?-1:1);
+  $('pG').value='';save();renderHistory();toast(`Added ${shortDate(d)}: ${fmt(v)}g`,false);
+};
+['pDate','pG'].forEach(id=>$(id).addEventListener('input',()=>{$('pErr').textContent=''}));
 
 function renderUsual(){
   $('favList').innerHTML=S.favs.length?S.favs.map(f=>`<div class="rr"><span class="nm">${esc(f.name)}</span><span class="row" style="gap:4px">${fmt(f.g)}g<button class="x" data-rmfav="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span></div>`).join(''):'<div class="empty">No favorites yet.</div>';
@@ -187,6 +214,7 @@ $('imp').onchange=async()=>{
 };
 
 function go(v){
+  pastSel=null;
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   if(v==='history')renderHistory();if(v==='usual')renderUsual();if(v==='today')renderToday();
   window.scrollTo(0,0);
