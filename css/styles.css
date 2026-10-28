@@ -66,6 +66,10 @@ input[type=range]:focus{outline:none}
 .rm{font-family:var(--sans);text-transform:none;font-size:13px;color:var(--on);background:var(--br);border-radius:8px;padding:6px 10px}
 .rm.ghost{background:none;color:var(--br);border:0.5px solid var(--br)}
 .rr .pin{width:72px;height:34px;padding:0 8px;flex:none;font-family:var(--mono)}
+.sw{display:flex;align-items:center;gap:10px;background:var(--card);border:0.5px solid var(--line);border-radius:12px;padding:10px 12px;min-height:48px;font-size:14px;text-align:left}
+.sw.on{box-shadow:inset 0 0 0 2px var(--br)}
+.sw .dots{display:flex;flex:none}
+.sw i{width:16px;height:16px;border-radius:50%;border:0.5px solid var(--line);margin-right:-4px}
 .tot{border-top:0.5px dashed var(--line);margin-top:4px;padding-top:4px;font-weight:600}
 .empty{font-family:var(--sans);text-transform:none;color:var(--mid);font-size:14px;padding:6px 0}
 .hint{font-size:12px;color:var(--mid);margin:8px 2px 0}

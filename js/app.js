@@ -11,7 +11,7 @@ const DEFAULTS={
   goal:160,maxOz:16,lastOz:6,
   favs:[{id:uid(),name:'Greek yogurt',g:23},{id:uid(),name:'Protein shake',g:25},{id:uid(),name:'2 eggs',g:12},{id:uid(),name:'Cheese stick',g:7}],
   meats:[{id:uid(),name:'Chicken breast',r:6.5},{id:uid(),name:'Beef 90/10',r:5.7},{id:uid(),name:'Ground turkey',r:5.3},{id:uid(),name:'Salmon',r:5.6}],
-  sel:null,day:{start:null,entries:[]},history:[]
+  sel:null,day:{start:null,entries:[]},history:[],theme:{mode:'auto',pal:'claret'}
 };
 
 let mem=null;
@@ -71,7 +71,7 @@ $('tUndo').onclick=()=>{
 };
 
 document.addEventListener('click',ev=>{
-  const b=ev.target.closest('[data-fav],[data-meat],[data-entry],[data-go],[data-rmfav],[data-rmmeat],[data-past],[data-savepast],[data-rmpast],.rm');
+  const b=ev.target.closest('[data-fav],[data-meat],[data-entry],[data-go],[data-rmfav],[data-rmmeat],[data-past],[data-savepast],[data-rmpast],[data-mode],[data-pal],.rm');
   if(!b||ev.target.tagName==='INPUT')return;
   if(b.dataset.fav){const f=S.favs.find(x=>x.id===b.dataset.fav);if(f)add(f.name,f.g)}
   else if(b.dataset.meat){S.sel=b.dataset.meat;save();renderToday()}
@@ -87,6 +87,7 @@ document.addEventListener('click',ev=>{
     if(!sel){const r=$('log').querySelector(`[data-entry="${row.dataset.entry}"]`);r.classList.add('sel');r.lastElementChild.outerHTML=`<button class="rm" data-id="${row.dataset.entry}">Remove</button>`}
   }
   else if(b.dataset.go)go(b.dataset.go);
+  else if(b.dataset.mode||b.dataset.pal){S.theme={...S.theme,...b.dataset.mode?{mode:b.dataset.mode}:{pal:b.dataset.pal}};save();applyTheme(S.theme);renderUsual()}
   else if(b.dataset.rmfav){S.favs=S.favs.filter(f=>f.id!==b.dataset.rmfav);save();renderUsual()}
   else if(b.dataset.rmmeat){
     if(S.meats.length<=1&&!confirm('Remove your last meat?'))return;
@@ -183,6 +184,8 @@ function renderUsual(){
   $('favList').innerHTML=S.favs.length?S.favs.map(f=>`<div class="rr"><span class="nm">${esc(f.name)}</span><span class="row" style="gap:4px">${fmt(f.g)}g<button class="x" data-rmfav="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span></div>`).join(''):'<div class="empty">No favorites yet.</div>';
   $('meatList').innerHTML=S.meats.length?S.meats.map(m=>`<div class="rr"><span class="nm">${esc(m.name)}</span><span class="row" style="gap:4px">${fmt(m.r)}<button class="x" data-rmmeat="${m.id}" aria-label="Remove ${esc(m.name)}">×</button></span></div>`).join(''):'<div class="empty">No meats yet.</div>';
   $('goal').value=S.goal;$('maxOz').value=S.maxOz;
+  $('modes').innerHTML=['auto','light','dark'].map(m=>`<button class="chip${S.theme.mode===m?' on':''}" data-mode="${m}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('');
+  $('pals').innerHTML=Object.entries(PALETTES).map(([k,p])=>`<button class="sw${S.theme.pal===k?' on':''}" data-pal="${k}"><span class="dots">${[p.light.bg,p.light.br,p.dark.bg,p.dark.br].map(c=>`<i style="background:${c}"></i>`).join('')}</span>${p.name}</button>`).join('');
 }
 function addItem(nameEl,valEl,errEl,max,fn){
   const n=$(nameEl).value.trim(),v=parseFloat($(valEl).value);
@@ -208,7 +211,7 @@ $('impBtn').onclick=()=>$('imp').click();
 $('imp').onchange=async()=>{
   const f=$('imp').files[0];if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d.history||!d.day)throw 0;
-    if(confirm('Replace everything on this phone with the backup?')){S=Object.assign(structuredClone(DEFAULTS),d);save();renderUsual();renderToday();toast('Backup imported',false)}}
+    if(confirm('Replace everything on this phone with the backup?')){S=Object.assign(structuredClone(DEFAULTS),d);save();applyTheme(S.theme);renderUsual();renderToday();toast('Backup imported',false)}}
   catch(e){toast("That file isn't a Protein Calc backup",false)}
   $('imp').value='';
 };
@@ -221,6 +224,7 @@ function go(v){
 }
 
 $('sl').value=Math.min(S.lastOz||6,S.maxOz);
-renderToday();rollover();
+renderToday();rollover();applyTheme(S.theme);
+darkQ.addEventListener('change',()=>applyTheme(S.theme));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderToday();rollover()}});
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
